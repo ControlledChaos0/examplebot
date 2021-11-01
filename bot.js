@@ -7,14 +7,24 @@ var T = new Twit(require('./config.js'));
 // This is the URL of a search for the latest tweets on the '#mediaarts' hashtag.
 var mentionSearch = {q: "@OwOifierBot", filter: "replies", count: 10, result_type: "recent"}; 
 
+
+/*function replyOwO() {
+	T.get('search/tweets', mentionSearch, )
+}*/
+
+
+
+
+
+
 // This function finds the latest tweet with the #mediaarts hashtag, and retweets it.
 function retweetLatest() {
-	T.get('search/tweets', mediaArtsSearch, function (error, data) {
+	T.get('search/tweets', mentionSearch, function (error, data) {
 	  // log out any errors and responses
 	  console.log(error, data);
 	  // If our search request to the server had no errors...
 	  if (!error) {
-	  	// ...then we grab the ID of the tweet we want to retweet..., the tweet in which its replied to
+	  	// ...then we grab the ID of the tweet we want to retweet...
 		var retweetId = data.statuses[0].in_reply_to_status_id;
 		// ...and then we tell Twitter we want to retweet it!
 		T.post('statuses/retweet/' + retweetId, { }, function (error, response) {
@@ -26,6 +36,7 @@ function retweetLatest() {
 				console.log('There was an error with Twitter:', error);
 			}
 		})
+		console.log(retweetId);
 	  }
 	  // However, if our original search request had an error, we want to print it out here.
 	  else {
