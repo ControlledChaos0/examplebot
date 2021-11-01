@@ -14,7 +14,8 @@ function retweetLatest() {
 	  console.log(error, data);
 	  // If our search request to the server had no errors...
 	  if (!error) {
-	  	// ...then we grab the ID of the tweet we want to retweet..., the tweet in which its replied to
+	  	// ...then we grab the ID of the tweet we want to retweet...,
+		var mentionedId = data.statuses[0].id_str;
 		var retweetId = data.statuses[0].in_reply_to_status_id;
 		// ...and then we tell Twitter we want to retweet it!
 		T.post('statuses/retweet/' + retweetId, { }, function (error, response) {
