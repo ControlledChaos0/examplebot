@@ -25,17 +25,36 @@ function retweetLatest() {
 	  // If our search request to the server had no errors...
 	  if (!error) {
 	  	// ...then we grab the ID of the tweet we want to retweet...
-		var retweetId = data.statuses[0].in_reply_to_status_id;
-		// ...and then we tell Twitter we want to retweet it!
-		T.post('statuses/retweet/' + retweetId, { }, function (error, response) {
+		var retweetId = data.statuses[0].in_reply_to_status_id_str;
+		var replyUserId = data.statuses[0].in_reply_to_screen_name;
+		T.post('users/likes/' + data.statuses[0].id_str, { }, function (error, response) {
+			console.log(response, error);
 			if (response) {
-				console.log('Success! Check your bot, it should have retweeted something.')
+				console.log("Tweet has been liked!");
 			}
-			// If there was an error with our Twitter call, we print it out here.
 			if (error) {
-				console.log('There was an error with Twitter:', error);
+				console.log("God fuck goddammit fuck shit fuck");
 			}
 		})
+		
+		var originalTweet =  replyUserId + '/status/' + retweetId;
+
+
+		T.get('tweets/' + retweetId, {}, function (error, data) {
+			//console.log(error, data);
+			if (!error) {
+				/*T.post('statuses/retweet/' + retweetId, { }, function (error, response) {
+					if (response) {
+						console.log('Success! Check your bot, it should have retweeted something.')
+					}
+					// If there was an error with our Twitter call, we print it out here.
+					if (error) {
+						console.log('There was an error with Twitter:', error);
+					}
+				})*/
+			}
+		})
+		
 		console.log(retweetId);
 	  }
 	  // However, if our original search request had an error, we want to print it out here.
