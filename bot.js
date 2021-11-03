@@ -9,8 +9,11 @@ var mentionSearch = {q: "@OwOifierBot", filter: "replies", count: 10, result_typ
 
 const owoArray = ['1'];
 
+// This function chooses a random number between 0 and 9, and depending on that number, it will choose a different face.
 function randomOwO() {
+	// Random number is chosen
 	let rand = Math.floor(Math.random() * 10);
+	// Set into a switch statement to check what it is and which face it corresponds to.
 	switch (rand) {
 		case 0:
 		case 1:
@@ -29,6 +32,7 @@ function randomOwO() {
 	}
 }
 
+// This function changes a string to an "OwOified" version of it by replacing r's and l's with w's, n's with ny's, and adds OWO faces after exclamation marks
 function stringOwOify(ogText) {
 	ogText = ogText.replace(/r/g, 'w');
 	ogText = ogText.replace(/R/g, "W");
@@ -50,58 +54,82 @@ function stringOwOify(ogText) {
 	ogText = ogText.replace(/Nu/g, "Nyu");
 	ogText = ogText.replace(/NU/g, "NYU");
 	ogText = ogText.replace(/NU/g, "NYU");
-	ogText = ogText.replace(/! /g, randomOwO());
+	ogText = ogText.replace(/! /g, "! " + randomOwO());
 	return ogText;
 }
 
 
-// This function finds the latest tweet with the #mediaarts hashtag, and retweets it.
+// This function finds the latest reply with the @OwOifierBot mention, likes the reply, gets the tweet from the tweet the reply is to, and replies to the original reply with edited text
 function letsOwO() {
 	T.get('search/tweets', mentionSearch, function (error, data) {
 	  // log out any errors and responses
 	  console.log(error, data);
 	  // If our search request to the server had no errors...
 	  if (!error) {
-	  	// ...then we grab the ID of the tweet we want to retweet...
-		for(var i = 0; i <= data.statuses.length; i++) {
+	  	// Enter a for loop to check if the tweet has already been interacted with. (Work around for favorited being bugged on Twitter's end and more complex code to be written)
+		for(let i = 0; i <= data.statuses.length; i++) {
+			// If we reach the end of the array without finding a new tweet...
 			if (i == data.statuses.length) {
+				// Bot logs that no new tweets are available and method ends until next time.
 				console.log("No new tweets! Wait until there's a new one!")
 				return;
 			}
-			for(var j = owoArray.length-1; j >= -1; j--) {
+			// Enter a for loop to check through the array of previously interacted with tweet ids going from most recently added id to least recent.
+			for(let j = owoArray.length-1; j >= -1; j--) {
+				// If loop reaches back of the array without finding a tweet, the tweet has not been interacted with before.
 				if (j == -1) {
+					//Set id of the reply
 					var tweetId = data.statuses[i].id_str;
+					//Set id of the tweet above
 					var previousTweetId = data.statuses[i].in_reply_to_status_id_str;
+					//Set name of who made the reply
 					var user = data.statuses[i].user.screen_name;
+					//Stops first for loop from running
 					i = data.statuses.length + 2;
 				}
+				// If the id of the reply is equal to the id of a reply already responded to, the loop doesn't check the rest of the array
 				else if (data.statuses[i].id_str == owoArray[j]) {
 					break;
 				}
 			}
 		}
 
+		// Let bot know the reply is being interacted with this interation, and does not need to be interacted with again by adding it to the array
 		owoArray.push(tweetId);
 
+		// Bot likes the reply
 		T.post('favorites/create', { id: tweetId }, function (error, response) {
+			// Prints out response and if there are any errors.
 			console.log(response, error);
+			// If there is an error, most likely it will be that the reply has already been liked, so there is no need to reply as it has already been interacted with and replied to.
+			if (error) {
+				// Method stops
+				return;
+			}
+			// If there is a positive response, then the reply has been liked, and the bot prints it to the console.
 			if (response) {
 				console.log("Tweet has been liked!");
 			}
-			if (error) {
-				console.log("aaaaaaaaaa");
-			}
 		})
 
+		// This function gets the tweet that the reply with the @OwOifierBot is asking to be "OwOified", so the bot can find the text of the tweet.
 		T.get('statuses/show/' + previousTweetId, {}, function (error, data) {
+			// Prints out if there are any errors and the data associated with the tweet
 			console.log(error, data);
+			// If there are no errors...
 			if (!error) {
+				// Set ogText the original text of the tweet
 				var ogText = data.text;
+				// Call stringOwOify function to change original text and set it to a new variable.
 				var oWoText = stringOwOify(ogText);
+				// Add a mention of the user to the text to fulfill a rule on Twitter that you can only reply to a tweet if the bot mentions them somewhere in the tweet.
 				oWoText = oWoText + " @" + user;
 
+				// If the length of the tweet text is within Twitter's posting limit...
 				if (oWoText.length <= 280) {
+					// The Bot replies to the reply mentioning the bot with the "owoified" text.
 					T.post('statuses/update', {status: oWoText, in_reply_to_status_id: tweetId}, function (error, data, response) {
+						// If everything goes correctly, the bot will print that it has successfully tweeted.
 						if (response) {
 							console.log('Success! Check your bot, it should have tweeted something.')
 						}
@@ -110,8 +138,11 @@ function letsOwO() {
 							console.log('There was an error with Twitter:', error);
 						}
 					})
+				// If the length of the tweet text is too long for Twitter's posting limit...
 				} else {
+					// The Bot replies to the reply mentioning the bot letting them know the changed text would be too long to post unfortunately.
 					T.post('statuses/update', {status: "Sowwy, buw the OwOified text wouwd be too wong! BwB @" + user , in_reply_to_status_id: tweetId}, function (error, data, response) {
+						// If everything goes correctly, the bot will print that it has successfully tweeted.
 						if (response) {
 							console.log('Success! Check your bot, it should have tweeted something.')
 						}
@@ -132,8 +163,7 @@ function letsOwO() {
 	});
 }
 
-// Try to retweet something as soon as we run the program...
+// Try to look for a mention as soon as the program runs
 letsOwO();
-// ...and then every hour after that. Time here is in milliseconds, so
-// 1000 ms = 1 second, 1 sec * 60 = 1 min, 1 min * 60 = 1 hour --> 1000 * 60 * 60
+// ...and then every 30 seconds after that
 setInterval(letsOwO, 1000 * 30);
