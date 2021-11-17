@@ -63,7 +63,7 @@ function stringOwOify(ogText) {
 function letsOwO() {
 	T.get('search/tweets', mentionSearch, function (error, data) {
 	  // log out any errors and responses
-	  console.log(error, data);
+	  //console.log(error, data);
 	  // If our search request to the server had no errors...
 	  if (!error) {
 	  	// Enter a for loop to check if the tweet has already been interacted with. (Work around for favorited being bugged on Twitter's end and more complex code to be written)
@@ -96,6 +96,7 @@ function letsOwO() {
 
 		// Let bot know the reply is being interacted with this interation, and does not need to be interacted with again by adding it to the array
 		owoArray.push(tweetId);
+		var error = false;
 
 		// Bot likes the reply
 		T.post('favorites/create', { id: tweetId }, function (error, response) {
@@ -103,8 +104,8 @@ function letsOwO() {
 			console.log(response, error);
 			// If there is an error, most likely it will be that the reply has already been liked, so there is no need to reply as it has already been interacted with and replied to.
 			if (error) {
-				// Method stops
-				return;
+				//Therefore, error is true
+				error = true;
 			}
 			// If there is a positive response, then the reply has been liked, and the bot prints it to the console.
 			if (response) {
@@ -112,14 +113,20 @@ function letsOwO() {
 			}
 		})
 
+		// If error is true...
+		if (error) {
+			// Stop the method before it tries to reply.
+			return;
+		}
+
 		// This function gets the tweet that the reply with the @OwOifierBot is asking to be "OwOified", so the bot can find the text of the tweet.
-		T.get('statuses/show/' + previousTweetId, {}, function (error, data) {
+		T.get('statuses/show/' + previousTweetId, {tweet_mode: "extended"}, function (error, data) {
 			// Prints out if there are any errors and the data associated with the tweet
 			console.log(error, data);
 			// If there are no errors...
 			if (!error) {
 				// Set ogText the original text of the tweet
-				var ogText = data.text;
+				var ogText = data.full_text;
 				// Call stringOwOify function to change original text and set it to a new variable.
 				var oWoText = stringOwOify(ogText);
 				// Add a mention of the user to the text to fulfill a rule on Twitter that you can only reply to a tweet if the bot mentions them somewhere in the tweet.
